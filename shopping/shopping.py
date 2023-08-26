@@ -46,7 +46,23 @@ def convert_to_numeric(data):
         'Dec': 11
     }
     for row in data[0]:
-        pass
+        row[0] = int(row[0])
+        row[1] = float(row[1])
+        row[2] = int(row[2])
+        row[3] = float(row[3])
+        row[4] = int(row[4])
+        row[5] = float(row[5])
+        row[6] = float(row[6])
+        row[7] = float(row[7])
+        row[8] = float(row[8])
+        row[9] = float(row[9])
+        row[10] = month[row[10]]
+        row[11] = int(row[11])
+        row[12] = int(row[12])
+        row[13] = int(row[13])
+        row[14] = int(row[14])
+        row[15] = 1 if row[15].lower() == 'returning_visitor' else 0
+        row[16] = 1 if row[16].lower() == 'true' else 0
 
     for row in data[1]:
         row = 1 if row.lower() == 'true' else 0
@@ -79,12 +95,17 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    result = []
+    evidence = []
+    labels = []
     with open('shopping.csv', 'r') as f:
         reader = csv.reader(f)
-        header = next(reader)
+        next(reader)
         for row in reader:
-            result.append((row[:-1], row[-1:]))
+            evidence.append(row[:-1])
+            labels.append(row[-1:][0])
+    result = (evidence, labels)
+    convert_to_numeric(result)
+    return result
 
 
 def train_model(evidence, labels):
@@ -92,7 +113,8 @@ def train_model(evidence, labels):
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    neigh = KNeighborsClassifier(n_neighbors=1)
+    return neigh.fit(evidence, labels)
 
 
 def evaluate(labels, predictions):
@@ -110,7 +132,32 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+    # Initialize the counters
+    true_positive = 0
+    true_negative = 0
+    false_positive = 0
+    false_negative = 0
+
+    # Iterate over the pairs of labels and predictions
+    for label, prediction in zip(labels, predictions):
+        if label == 'TRUE' and prediction == 'TRUE':
+            true_positive += 1
+        elif label == 'FALSE' and prediction == 'FALSE':
+            true_negative += 1
+        elif label == 'TRUE' and prediction == 'FALSE':
+            false_negative += 1
+        elif label == 'FALSE' and prediction == 'TRUE':
+            false_positive += 1
+
+    print(true_positive, true_negative, false_positive, false_negative)
+
+    # Calculate sensitivity (true positive rate)
+    sensitivity = true_positive / (true_positive + false_negative)
+
+    # Calculate specificity (true negative rate)
+    specificity = true_negative / (true_negative + false_positive)
+
+    return sensitivity, specificity
 
 
 if __name__ == "__main__":
